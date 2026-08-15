@@ -43,6 +43,14 @@ IMU BMI270 SPI:bmi270 ROTATION_ROLL_180_YAW_90
 # one Baro:
 BARO BMP280 I2C:0:0x76
 
+# one Compass:
+# The BMM150 sits at 0x10 on the internal I2C bus (I2C_NUM_0), confirmed by
+# scanning the bus on real hardware. The automatic probe only walks external
+# buses (FOREACH_I2C_EXTERNAL), so it never finds this one and it has to be
+# declared here. Declared external so that COMPASS_AUTO_ROT can determine the
+# sensor orientation; onboard calibration reports ROTATION_YAW_90.
+COMPASS BMM150 I2C:0:0x10 true ROTATION_NONE
+
 # HARDWARE UARTS. UART 0 apparently goes over USB? so we assign it to pins we
 # don't have mapped to anything. might be fixable in the HAL...
 # UART 1 (SERIAL3) is the black grove connector
@@ -61,7 +69,7 @@ define AP_AIRSPEED_ENABLED 0
 
 define HAL_ESP32_BOARD_NAME "esp32s3m5stampfly"
 
-define AP_COMPASS_ENABLE_DEFAULT 0
+define AP_COMPASS_ENABLE_DEFAULT 1
 
 # no ADC
 

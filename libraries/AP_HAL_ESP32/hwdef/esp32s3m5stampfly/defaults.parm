@@ -44,3 +44,6 @@ BATT_LOW_VOLT   3.4
 BATT_MONITOR    30
 BATT_OPTIONS    0
 BATT_SERIAL_NUM -1
+
+# compass settings
+COMPASS_OFFS_MAX 3000 # motor magnets sit close, offsets exceed the 1800 default
