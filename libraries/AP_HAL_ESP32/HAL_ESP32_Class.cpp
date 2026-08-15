@@ -155,6 +155,47 @@ void HAL_ESP32::run(int argc, char * const argv[], Callbacks* callbacks) const
     }
 #endif
 
+#ifdef HAL_ESP32_I2C_ADDR_INIT_LIST
+    /*
+      Bring up sensors which share a default I2C address one at a time, giving
+      each its own address before the next is released, so that they can all be
+      used together.
+
+      Each step raises a pin, waits for the part to boot, and writes one byte
+      to a 16 bit register on the device at the address it currently answers
+      on. A zero register skips the write, which is what the last part wants
+      since it keeps the default address.
+
+      In hwdef.dat:
+        define HAL_ESP32_I2C_ADDR_INIT_LIST { {9, 0, 0x29, 0x0001, 0x2A}, {7, 0, 0x29, 0, 0} }
+    */
+    {
+        static const struct {
+            uint8_t pin;    // pin releasing this part from reset
+            uint8_t bus;
+            uint8_t addr;   // address it answers on once booted
+            uint16_t reg;   // register holding its address, 0 to skip
+            uint8_t val;    // address to move it to
+        } steps[] = HAL_ESP32_I2C_ADDR_INIT_LIST;
+
+        for (const auto &s : steps) {
+            hal.gpio->pinMode(s.pin, HAL_GPIO_OUTPUT);
+            hal.gpio->write(s.pin, 1);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            if (s.reg == 0) {
+                continue;
+            }
+            AP_HAL::I2CDevice *dev = hal.i2c_mgr->get_device_ptr(s.bus, s.addr);
+            if (dev == nullptr) {
+                continue;
+            }
+            const uint8_t msg[3] { uint8_t(s.reg >> 8), uint8_t(s.reg & 0xff), s.val };
+            WITH_SEMAPHORE(dev->get_semaphore());
+            dev->transfer(msg, sizeof(msg), nullptr, 0);
+        }
+    }
+#endif
+
     ((ESP32::Scheduler *)hal.scheduler)->set_callbacks(callbacks);
     hal.scheduler->init();
 }
