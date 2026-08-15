@@ -47,3 +47,15 @@ BATT_SERIAL_NUM -1
 
 # compass settings
 COMPASS_OFFS_MAX 3000 # motor magnets sit close, offsets exceed the 1800 default
+
+# rangefinders: VL53L3CX looking down, and a second looking forward
+RNGFND1_TYPE   28
+RNGFND1_ADDR   41 # 0x29
+RNGFND1_ORIENT 25 # down
+RNGFND1_MIN    0.02
+RNGFND1_MAX    3
+RNGFND2_TYPE   28
+RNGFND2_ADDR   42 # 0x2A
+RNGFND2_ORIENT 0  # forward
+RNGFND2_MIN    0.02
+RNGFND2_MAX    3

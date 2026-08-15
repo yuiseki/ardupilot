@@ -64,6 +64,19 @@ ESP32_RCOUT GPIO_NUM_10
 ESP32_RCOUT GPIO_NUM_5
 ESP32_RCOUT GPIO_NUM_41
 
+# The StampFly carries two VL53L3CX ToF sensors, both of which default to
+# I2C address 0x29. The stock firmware brings them up one at a time using
+# XSHUT and moves the forward-facing one to 0x54 before enabling the
+# downward-facing one at 0x29. We have no equivalent re-addressing step, so
+# so bring them up one at a time and move the forward one aside first, the
+# same order the stock firmware uses. Left undriven both answer at 0x29 and
+# collide.
+#   G6 = down INT / G7 = down XSHUT / G8 = forward INT / G9 = forward XSHUT
+# Hold both in reset, then release them in turn:
+define HAL_ESP32_GPIO_INIT_LIST { {7, 0}, {9, 0} }
+# forward part moves to 0x2A, downward part keeps 0x29
+define HAL_ESP32_I2C_ADDR_INIT_LIST { {9, 0, 0x29, 0x0001, 0x2A}, {7, 0, 0x29, 0, 0} }
+
 # the stampfly does not have an Airspeed sensor:
 define AP_AIRSPEED_ENABLED 0
 
