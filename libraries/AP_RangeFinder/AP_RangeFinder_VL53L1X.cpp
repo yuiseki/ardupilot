@@ -77,11 +77,15 @@ bool AP_RangeFinder_VL53L1X::check_id(void)
         return false;
     }
 
+    // 0xCC is VL53L1X, 0xAA is VL53L3CX. The L3CX shares the L1X register
+    // layout, so accepting its module type is enough to drive it with this
+    // driver. Verified on M5Stack StampFly hardware, which reads 0xEA/0xAA.
     if ((v1 != 0xEA) ||
-        (v2 != 0xCC)) {
+        (v2 != 0xCC && v2 != 0xAA)) {
         return false;
     }
-    printf("Detected VL53L1X on bus 0x%x\n", unsigned(dev->get_bus_id()));
+    printf("Detected VL53L%sX on bus 0x%x\n", v2 == 0xAA ? "3C" : "1",
+           unsigned(dev->get_bus_id()));
     return true;
 }
 
