@@ -133,6 +133,28 @@ void HAL_ESP32::run(int argc, char * const argv[], Callbacks* callbacks) const
     AP::sitl()->init();
 #endif  // AP_SIM_ENABLED
 
+#ifdef HAL_ESP32_GPIO_INIT_LIST
+    /*
+      Drive GPIOs to a fixed level early in boot, as requested by hwdef.
+
+      This is needed on boards carrying several sensors that share one I2C
+      address, where the spare ones must be held in reset. The M5Stack
+      StampFly has two VL53L3CX ToF sensors which both default to 0x29, so
+      without driving their XSHUT pins both appear at the same address and
+      collide on the bus.
+
+      In hwdef.dat:
+        define HAL_ESP32_GPIO_INIT_LIST { {9, 0}, {7, 1} }
+    */
+    {
+        static const struct { uint8_t pin; uint8_t level; } gpio_init[] = HAL_ESP32_GPIO_INIT_LIST;
+        for (const auto &g : gpio_init) {
+            hal.gpio->pinMode(g.pin, HAL_GPIO_OUTPUT);
+            hal.gpio->write(g.pin, g.level);
+        }
+    }
+#endif
+
     ((ESP32::Scheduler *)hal.scheduler)->set_callbacks(callbacks);
     hal.scheduler->init();
 }
